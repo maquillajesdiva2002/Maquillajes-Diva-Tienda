@@ -167,6 +167,7 @@
   .item-subtotal { font-weight: 700; font-size: 15px; margin-left: 6px; }
   .total { display: flex; justify-content: space-between; align-items: baseline; border-top: 2px solid var(--burdeos); margin-top: 6px; padding-top: 14px; font-size: 18px; }
   .total b { font-size: 26px; }
+  .nota-precios { font-size: 13px; color: var(--texto-2); margin-top: 6px; }
   .vacio { color: var(--texto-2); padding: 18px 0 6px; }
   .pestanas { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 4px; }
   .pestana { flex: none; border: 2px solid #EAD1CB; background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 14px; font-weight: 500; color: var(--carbon); }
@@ -258,6 +259,7 @@
     <h2 class="titulo-hoja" id="tituloCarrito">Tu pedido</h2>
     <div id="listaCarrito"></div>
     <div class="total" id="totalCarrito"><span>Total</span><b>$0</b></div>
+    <p class="nota-precios">Precios finales en pesos uruguayos. El envío se coordina por WhatsApp.</p>
     <button class="btn-principal btn-wa" id="btnFinalizar">Enviar pedido por WhatsApp</button>
     <button class="btn-secundario" data-cerrar>Seguir mirando</button>
   </div>
@@ -368,9 +370,11 @@ function precio(n) { return TIENDA.moneda + Number(n).toLocaleString('es-UY'); }
 function prod(id) { return TIENDA.productos.find(p => p.id === id); }
 function cat(id) { return TIENDA.categorias.find(c => c.id === id); }
 
-TIENDA.categorias.forEach(c => {
+function llenarParedesProductos() {
+ TIENDA.categorias.forEach(c => {
   const w = document.querySelector(`#fuentes [data-sala="productos"] [data-pared="${c.pared}"]`);
-  const destacados = TIENDA.productos.filter(p => p.cat === c.id && p.destacado).slice(0, 3);
+  const deCat = TIENDA.productos.filter(p => p.cat === c.id);
+  let destacados = deCat.filter(p => p.destacado).slice(0, 3); if (!destacados.length) destacados = deCat.slice(0, 3);
   w.innerHTML = `<div class="marca-agua">Maquillajes Diva · Maquillajes Diva · Maquillajes Diva</div>
     <div class="categoria">${c.nombre}</div>
     ${destacados.length ? '' : '<div class="proximamente">Próximamente</div>'}
@@ -380,6 +384,8 @@ TIENDA.categorias.forEach(c => {
     <div class="tabla"></div>
     <div class="mueble"><button class="ver-mas" data-cat="${c.id}">Ver más de ${c.nombre.toLowerCase()} →</button></div>`;
 });
+}
+llenarParedesProductos();
 // focos del espejo
 (function () {
   const esp = document.querySelector('#fuentes .espejo'), W = 680, H = 520, m = 28, n = 7, k = 5, pos = [];
@@ -403,30 +409,33 @@ const HUELLAS = { productos: { x: 0, z: -420, a: 'caja', texto: 'Caja' }, caja: 
 const pie = `<svg viewBox="0 0 60 60" width="84" height="84" aria-hidden="true"><g fill="#7A2E42">
   <ellipse cx="20" cy="36" rx="8" ry="13"/><circle cx="14" cy="18" r="3"/><circle cx="20" cy="15" r="3"/><circle cx="26" cy="17" r="3"/>
   <ellipse cx="40" cy="30" rx="8" ry="13"/><circle cx="34" cy="12" r="3"/><circle cx="40" cy="9" r="3"/><circle cx="46" cy="11" r="3"/></g></svg>`;
-(function () {
-  const N = 14, cont = $('paredes');
-  const defs = [['frente', ANCHO, `translateZ(${-FONDO / 2}px)`], ['atras', ANCHO, `rotateY(180deg) translateZ(${-FONDO / 2}px)`],
-    ['izquierda', FONDO, `rotateY(90deg) translateZ(${-ANCHO / 2}px)`], ['derecha', FONDO, `rotateY(-90deg) translateZ(${-ANCHO / 2}px)`]];
-  document.querySelectorAll('#fuentes [data-sala]').forEach(salaFuente => {
-    const nombre = salaFuente.dataset.sala, sala = document.createElement('div');
-    sala.className = 'sala3d'; sala.dataset.sala = nombre; sala.hidden = nombre !== 'productos';
-    defs.forEach(([pared, w, base]) => {
-      const fuente = salaFuente.querySelector(`[data-pared="${pared}"]`);
-      fuente.style.width = w + 'px'; fuente.style.height = ALTO + 'px';
-      const t = w / N;
-      for (let i = 0; i < N; i++) {
-        const f = document.createElement('div'); f.className = 'cara';
-        f.style.cssText = `width:${t + 2}px;height:${ALTO + 2}px;margin-left:${-(t + 2) / 2}px;margin-top:${-(ALTO + 2) / 2}px;transform:${base} translateX(${-w / 2 + t * (i + 0.5)}px)`;
-        const copia = fuente.cloneNode(true); copia.style.left = (-i * t + 1) + 'px'; copia.style.height = (ALTO + 2) + 'px';
-        f.appendChild(copia); sala.appendChild(f);
-      }
-    });
-    const h = HUELLAS[nombre], hu = document.createElement('div');
-    hu.className = 'huella'; hu.style.transform = `translate3d(${h.x}px,${ALTO / 2 - 2}px,${h.z}px) rotateX(90deg)${h.z > 0 ? ' rotateZ(180deg)' : ''}`;
-    hu.innerHTML = `<div class="circulo">${pie}</div><span>${h.texto}</span>`;
-    sala.appendChild(hu); cont.appendChild(sala);
+var salaVisible = 'productos';
+const DEFS_PAREDES = [['frente', ANCHO, `translateZ(${-FONDO / 2}px)`], ['atras', ANCHO, `rotateY(180deg) translateZ(${-FONDO / 2}px)`],
+  ['izquierda', FONDO, `rotateY(90deg) translateZ(${-ANCHO / 2}px)`], ['derecha', FONDO, `rotateY(-90deg) translateZ(${-ANCHO / 2}px)`]];
+function construirSala(salaFuente) {
+  const N = 14, nombre = salaFuente.dataset.sala, sala = document.createElement('div');
+  sala.className = 'sala3d'; sala.dataset.sala = nombre; sala.hidden = nombre !== salaVisible;
+  DEFS_PAREDES.forEach(([pared, w, base]) => {
+    const fuente = salaFuente.querySelector(`[data-pared="${pared}"]`);
+    fuente.style.width = w + 'px'; fuente.style.height = ALTO + 'px';
+    const t = w / N;
+    for (let i = 0; i < N; i++) {
+      const f = document.createElement('div'); f.className = 'cara';
+      f.style.cssText = `width:${t + 2}px;height:${ALTO + 2}px;margin-left:${-(t + 2) / 2}px;margin-top:${-(ALTO + 2) / 2}px;transform:${base} translateX(${-w / 2 + t * (i + 0.5)}px)`;
+      const copia = fuente.cloneNode(true); copia.style.left = (-i * t + 1) + 'px'; copia.style.height = (ALTO + 2) + 'px';
+      f.appendChild(copia); sala.appendChild(f);
+    }
   });
-})();
+  const h = HUELLAS[nombre], hu = document.createElement('div');
+  hu.className = 'huella'; hu.style.transform = `translate3d(${h.x}px,${ALTO / 2 - 2}px,${h.z}px) rotateX(90deg)${h.z > 0 ? ' rotateZ(180deg)' : ''}`;
+  hu.innerHTML = `<div class="circulo">${pie}</div><span>${h.texto}</span>`;
+  sala.appendChild(hu);
+  const vieja = document.querySelector(`#paredes .sala3d[data-sala="${nombre}"]`);
+  if (vieja) vieja.replaceWith(sala); else $('paredes').appendChild(sala);
+}
+document.querySelectorAll('#fuentes [data-sala]').forEach(construirSala);
+/* Si cambia el catálogo desde la pizarra, se rearman los estantes */
+function reconstruirProductos() { llenarParedesProductos(); construirSala(document.querySelector('#fuentes [data-sala="productos"]')); }
 
 /* ---------- Cámara, arrastre y detección de toques ---------- */
 const stage = $('stage'), scene = $('scene');
@@ -493,7 +502,7 @@ function irA(sala) {
   if (sala === salaActual) return;
   $('fundido').classList.add('activo');
   setTimeout(() => {
-    salaActual = sala;
+    salaActual = sala; salaVisible = sala;
     document.querySelectorAll('.sala3d').forEach(s => s.hidden = s.dataset.sala !== sala);
     yaw = 0; pitch = -4; render();
     $('btnSala').textContent = sala === 'caja' ? '← Volver a los productos' : 'Ir a la caja →';
@@ -586,11 +595,20 @@ $('listaProductos').addEventListener('click', e => { const b = e.target.closest(
 $('btnLista').addEventListener('click', () => abrirLista());
 
 /* ---------- Aplicar datos de la pizarra ---------- */
+let firmaCatalogo = '';
 function aplicarDatos(d) {
-  d = d || {}; const dp = d.productos || {};
+  d = d || {};
+  let cat2 = d.catalogo; if (cat2 && !Array.isArray(cat2)) cat2 = Object.values(cat2);
+  if (Array.isArray(cat2) && cat2.length) {
+    TIENDA.productos = cat2.filter(Boolean).map(x => ({ id: String(x.id), cat: x.cat, img: x.img || '', nombre: x.nombre || '', desc: x.desc || '',
+      precio: Number(x.precio) || 0, precioBase: Number(x.precio) || 0, color: x.color || '#DDAAA6', destacado: !!x.destacado, agotado: !!x.agotado, variantes: x.variantes }));
+    const firma = JSON.stringify(TIENDA.productos.map(p => [p.id, p.cat, p.nombre, p.img.length, p.img.slice(-40), p.destacado]));
+    if (firma !== firmaCatalogo) { firmaCatalogo = firma; reconstruirProductos(); }
+  }
+  const dp = Array.isArray(cat2) && cat2.length ? {} : (d.productos || {});
   TIENDA.productos.forEach(p => {
     const x = dp[p.id] || {}; if (p.precioBase === undefined) p.precioBase = p.precio;
-    p.precio = Number(x.precio) > 0 ? Number(x.precio) : p.precioBase; p.agotado = !!x.agotado;
+    if (!(Array.isArray(cat2) && cat2.length)) { p.precio = Number(x.precio) > 0 ? Number(x.precio) : p.precioBase; p.agotado = !!x.agotado; }
     document.querySelectorAll(`.producto-estante[data-id="${p.id}"]`).forEach(el => {
       el.classList.toggle('agotado', p.agotado); el.querySelector('.precio-tag span').textContent = p.agotado ? 'Agotado' : precio(p.precio);
     });
@@ -600,10 +618,10 @@ function aplicarDatos(d) {
   document.querySelectorAll('.espejo-sub').forEach(el => el.textContent = (e.sub || '').trim());
   const c = Object.assign({}, TIENDA.cartelera, d.cartelera || {});
   document.querySelectorAll('.cartelera-texto').forEach(el => el.textContent = (c.texto || '').trim());
-  const antes = carrito.length; carrito = carrito.filter(i => !prod(i.id).agotado);
+  const antes = carrito.length; carrito = carrito.filter(i => prod(i.id) && !prod(i.id).agotado);
   if (carrito.length < antes) avisar('Se quitó del pedido un producto agotado');
   renderLista(); actualizar(false);
-  if ($('capaProducto').classList.contains('abierta') && seleccion.id) pintarPrecioProducto(prod(seleccion.id));
+  if ($('capaProducto').classList.contains('abierta') && seleccion.id) { if (prod(seleccion.id)) pintarPrecioProducto(prod(seleccion.id)); else cerrarCapas(); }
 }
 escucharDatos(aplicarDatos);
 actualizar(false);
