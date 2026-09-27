@@ -78,6 +78,8 @@
   .restaurar { background: none; border: 0; color: var(--texto-2); text-decoration: underline; font-size: 14px; cursor: pointer; margin: 4px 0 20px; }
   .ingreso { text-align: center; padding: 30px 18px; }
   .ingreso button { margin-top: 14px; }
+  .sesion { font-size: 14px; color: var(--texto-2); margin: -8px 0 14px; }
+  .sesion button { background: none; border: 0; color: var(--grafito); text-decoration: underline; font-size: 14px; cursor: pointer; font-family: inherit; }
   [hidden] { display: none !important; }
   button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--cuero); outline-offset: 2px; }
 </style>
@@ -89,6 +91,7 @@
     <span class="marca">Maquillajes Diva</span>
     <a class="ver-tienda" href="./" target="_blank" rel="noopener">Ver la tienda ↗</a>
   </header>
+  <p class="sesion" id="sesion" hidden>Sesión: <b id="sesionCorreo"></b> · <button id="btnSalir">Cerrar sesión</button></p>
   <h1>La Pizarra</h1>
   <p class="bajada">Cambiá tus promociones, precios y stock. Los cambios aparecen en tu tienda al instante.</p>
 
@@ -98,7 +101,7 @@
 
   <section class="tarjeta ingreso" id="panelIngreso" hidden>
     <h2>Ingresá para editar tu tienda</h2>
-    <p class="ayuda">Solo la cuenta dueña de la tienda puede publicar cambios.</p>
+    <p class="ayuda">Solo la cuenta de la dueña de la tienda puede entrar.</p>
     <button class="btn-publicar" id="btnIngresar">Ingresar con Google</button>
   </section>
 
@@ -172,6 +175,7 @@ const FIREBASE_CONFIG = {
   appId: "1:1083206442745:web:932f971df9b18ecf7a8c28"
 };
 const RUTA_DATOS = 'tiendas/diva';
+const CORREO_DUENA = 'maquillajes.diva@gmail.com'; // única cuenta que puede entrar a la pizarra
 const CLAVE_DEMO = 'pizarra:' + RUTA_DATOS;
 const FB_VER = '10.12.2';
 function cargarScript(src) { return new Promise((ok, mal) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = mal; document.head.appendChild(s); }); }
@@ -263,7 +267,7 @@ $('btnPublicar').addEventListener('click', async () => {
     const e = $('estado'); e.className = 'estado ok';
     e.textContent = 'Publicado ✓ ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
   } catch (err) {
-    const e = $('estado'); e.className = 'estado error'; e.textContent = 'No se pudo publicar. Revisá la conexión o tu sesión.';
+    const e = $('estado'); e.className = 'estado error'; e.textContent = /PERMISSION_DENIED|permission/i.test(String(err && (err.code || err.message))) ? 'Esta cuenta no tiene permiso para publicar en esta tienda.' : 'No se pudo publicar. Revisá la conexión o tu sesión.';
   }
   $('btnPublicar').textContent = 'Publicar cambios'; revisar();
 });
@@ -284,19 +288,49 @@ function mostrarEditor(d) {
     let d = null; try { d = JSON.parse(localStorage.getItem(CLAVE_DEMO)); } catch (e) {}
     mostrarEditor(d); return;
   }
+  const ayuda = $('panelIngreso').querySelector('.ayuda');
+  const MENSAJES = {
+    'auth/unauthorized-domain': 'Falta autorizar este dominio en Firebase: Authentication → Configuración → Dominios autorizados → agregar maquillajesdiva2002.github.io',
+    'auth/operation-not-allowed': 'El ingreso con Google no está activado en Firebase: Authentication → Método de acceso → Google.',
+    'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Probando otra forma de ingreso…',
+    'auth/popup-closed-by-user': 'Se cerró la ventana de Google antes de terminar. Probá de nuevo.',
+    'auth/cancelled-popup-request': 'Se abrió otra ventana de ingreso. Probá de nuevo.',
+    'auth/network-request-failed': 'No hay conexión a internet.',
+    'auth/web-storage-unsupported': 'Este navegador bloquea el ingreso. Abrí la pizarra en Chrome.',
+    'auth/operation-not-supported-in-this-environment': 'Este navegador no permite el ingreso. Abrí la pizarra en Chrome.'
+  };
+  const mostrarError = err => { const c = (err && err.code) || 'desconocido'; ayuda.textContent = (MENSAJES[c] || 'No se pudo ingresar.') + ' (código: ' + c + ')'; };
   try {
     await iniciarFirebase(true);
-    $('btnIngresar').addEventListener('click', () => firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(() => {
-      $('panelIngreso').querySelector('.ayuda').textContent = 'No se pudo ingresar. Probá de nuevo.';
-    }));
+    const proveedor = new firebase.auth.GoogleAuthProvider();
+    proveedor.setCustomParameters({ prompt: 'select_account', login_hint: CORREO_DUENA });
+    firebase.auth().getRedirectResult().catch(mostrarError);
+    $('btnIngresar').addEventListener('click', () => {
+      ayuda.textContent = 'Abriendo Google…';
+      firebase.auth().signInWithPopup(proveedor).catch(err => {
+        mostrarError(err);
+        if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(err.code)) firebase.auth().signInWithRedirect(proveedor).catch(mostrarError);
+      });
+    });
+    $('btnSalir').addEventListener('click', () => firebase.auth().signOut());
     firebase.auth().onAuthStateChanged(async u => {
+      if (u && (u.email || '').toLowerCase() !== CORREO_DUENA) {
+        const correo = u.email || 'esa cuenta';
+        await firebase.auth().signOut();
+        ayuda.textContent = `La cuenta ${correo} no puede editar esta tienda. Ingresá con ${CORREO_DUENA}.`;
+        return;
+      }
+      $('sesion').hidden = !u; if (u) $('sesionCorreo').textContent = u.email;
       if (!u) { $('panelIngreso').hidden = false; $('editor').hidden = true; $('barra').hidden = true; return; }
-      const s = await firebase.database().ref(RUTA_DATOS).once('value');
-      mostrarEditor(s.val());
+      let datos = null;
+      try { const s = await firebase.database().ref(RUTA_DATOS).once('value'); datos = s.val(); }
+      catch (err) { mostrarEditor(null); const e = $('estado'); e.className = 'estado error';
+        e.textContent = 'Ingresaste, pero la base de datos no deja leer: revisá las reglas en Firebase (' + (err.code || err.message) + ').'; return; }
+      mostrarEditor(datos);
     });
   } catch (e) {
     $('panelIngreso').hidden = false;
-    $('panelIngreso').querySelector('.ayuda').textContent = 'No se pudo conectar con la base de datos.';
+    ayuda.textContent = 'No se pudo conectar con Firebase. Revisá la conexión.';
   }
 })();
 </script>
