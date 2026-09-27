@@ -54,7 +54,21 @@
     box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
   .interruptor input:checked { background: var(--grafito); }
   .interruptor input:checked::after { transform: translateX(18px); }
-  .producto { display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid var(--hueso-2); align-items: center; }
+  .producto { display: grid; grid-template-columns: 76px 1fr; gap: 12px; padding: 16px 0; border-top: 1px solid var(--hueso-2); align-items: start; }
+  .foto-btn { width: 76px; height: 96px; border-radius: 12px; border: 2px dashed var(--hueso-2); background: #fff; padding: 4px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--piedra); text-align: center; line-height: 1.2; }
+  .foto-btn img { width: 100%; height: 100%; object-fit: contain; }
+  .foto-btn.con-foto { border-style: solid; }
+  .campo-nombre { width: 100%; border: 2px solid var(--hueso-2); border-radius: 10px; padding: 9px 11px; font-size: 16px; font-weight: 500; color: #2B2427; background: #fff; font-family: inherit; }
+  .campo-nombre:focus, .sel-cat:focus { outline: none; border-color: var(--grafito); }
+  .campo-nombre.error { border-color: var(--rojo); }
+  .sel-cat { border: 2px solid var(--hueso-2); border-radius: 12px; padding: 9px 10px; font-size: 15px; background: #fff; color: #2B2427; font-family: inherit; }
+  .fila-botones { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .btn-estante { border: 2px solid var(--hueso-2); background: #fff; color: var(--texto-2); border-radius: 12px; padding: 9px 12px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .btn-estante[aria-pressed="true"] { border-color: var(--cuero); background: #F6EBD6; color: #6E5423; }
+  .btn-quitar { margin-left: auto; background: none; border: 0; color: var(--rojo); font-size: 14px; font-weight: 600; text-decoration: underline; cursor: pointer; font-family: inherit; }
+  .btn-agregar { width: 100%; margin-top: 14px; border: 2px dashed var(--grafito); background: transparent; color: var(--grafito); border-radius: 14px; padding: 14px; font-size: 16px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .aviso-foto { font-size: 12px; color: var(--cuero-osc); margin-top: 4px; }
   .producto:first-of-type { border-top: 0; }
   .muestra { width: 52px; height: 52px; border-radius: 12px; border: 2px solid var(--hueso-2); }
   .producto-nombre { font-weight: 500; }
@@ -125,11 +139,13 @@
 
     <section class="tarjeta">
       <h2>Productos</h2>
-      <p class="ayuda">Cambiá precios y marcá lo que no tengas en stock.</p>
+      <p class="ayuda">Agregá, editá o quitá productos. <b>En estante</b> = se ve en la pared de la tienda (hasta 3 por categoría). Los demás aparecen en "Ver más".</p>
       <div id="listaProductos"></div>
+      <button class="btn-agregar" id="btnAgregar">+ Agregar producto</button>
+      <input type="file" id="archivoFoto" accept="image/*" hidden>
     </section>
 
-    <button class="restaurar" id="btnRestaurar">Volver a los valores originales</button>
+    <button class="restaurar" id="btnRestaurar">Descartar los cambios sin publicar</button>
   </div>
 </main>
 
@@ -144,7 +160,7 @@
 /* Catálogo: copia del bloque TIENDA de la tienda (mantener igual en los dos archivos) */
 const TIENDA = {
   nombre: 'Maquillajes Diva',
-  whatsapp: '59891782945', // REEMPLAZAR por el número de Diva (598 + número sin el 0)
+  whatsapp: '59892272702', // número de WhatsApp de Diva
   moneda: '$',
   categorias: [
     { id: 'labios', nombre: 'Labios', pared: 'frente' },
@@ -200,58 +216,145 @@ async function escucharDatos(alCambiar) {
 /* ---------- Pizarra ---------- */
 const $ = id => document.getElementById(id);
 let publicado = null;
+let catalogo = [];
+const nuevoId = () => 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+function catalogoDesdeCodigo(dp) {
+  dp = dp || {};
+  return TIENDA.productos.map(p => { const x = dp[p.id] || {};
+    return { id: p.id, cat: p.cat, nombre: p.nombre, desc: p.desc || '', img: p.img || '', color: p.color || '#DDAAA6',
+      precio: Number(x.precio) > 0 ? Number(x.precio) : p.precio, destacado: !!p.destacado, agotado: !!x.agotado }; });
+}
 function datosOriginales() {
-  const productos = {};
-  TIENDA.productos.forEach(p => productos[p.id] = { precio: p.precio, agotado: false });
-  return { espejo: { ...TIENDA.espejo }, cartelera: { ...TIENDA.cartelera }, productos };
+  return { espejo: { ...TIENDA.espejo }, cartelera: { ...TIENDA.cartelera }, catalogo: catalogoDesdeCodigo() };
 }
 function completar(d) {
   const base = datosOriginales(); d = d || {};
   if (d.espejo) base.espejo = { titulo: String(d.espejo.titulo ?? base.espejo.titulo), sub: String(d.espejo.sub ?? base.espejo.sub) };
   if (d.cartelera) base.cartelera = { texto: String(d.cartelera.texto ?? base.cartelera.texto) };
-  TIENDA.productos.forEach(p => { const x = (d.productos || {})[p.id] || {};
-    base.productos[p.id] = { precio: Number(x.precio) > 0 ? Number(x.precio) : p.precio, agotado: !!x.agotado }; });
+  let c = d.catalogo; if (c && !Array.isArray(c)) c = Object.values(c);
+  base.catalogo = Array.isArray(c) && c.length ? c.filter(Boolean).map(x => ({ id: String(x.id), cat: x.cat, nombre: x.nombre || '', desc: x.desc || '',
+    img: x.img || '', color: x.color || '#DDAAA6', precio: Number(x.precio) || 0, destacado: !!x.destacado, agotado: !!x.agotado })) : catalogoDesdeCodigo(d.productos);
   return base;
+}
+function tarjeta(p) {
+  const opciones = TIENDA.categorias.map(c => `<option value="${c.id}"${c.id === p.cat ? ' selected' : ''}>${c.nombre}</option>`).join('');
+  return `<div class="producto" data-id="${p.id}">
+    <button class="foto-btn${p.img ? ' con-foto' : ''}" data-accion="foto" aria-label="Cambiar foto">${p.img ? `<img src="${p.img}" alt="">` : 'Subir<br>foto'}</button>
+    <div>
+      <input class="campo-nombre" data-campo="nombre" value="${(p.nombre || '').replace(/"/g, '&quot;')}" placeholder="Nombre del producto" maxlength="40" aria-label="Nombre">
+      <div class="controles">
+        <label class="precio-campo"><span>$</span><input type="number" data-campo="precio" inputmode="numeric" min="1" step="1" value="${p.precio || ''}" aria-label="Precio"></label>
+        <select class="sel-cat" data-campo="cat" aria-label="Categoría">${opciones}</select>
+      </div>
+      <div class="fila-botones">
+        <button class="btn-estante" data-accion="estante" aria-pressed="${p.destacado}">${p.destacado ? '★ En estante' : '☆ En estante'}</button>
+        <button class="btn-agotado" data-accion="agotado" aria-pressed="${p.agotado}">${p.agotado ? 'Agotado' : 'Disponible'}</button>
+        <button class="btn-quitar" data-accion="quitar">Quitar</button>
+      </div>
+      ${p.img ? '' : '<div class="aviso-foto">Sin foto: en la tienda se verá un dibujo genérico.</div>'}
+    </div>
+  </div>`;
+}
+function dibujarProductos() {
+  const orden = TIENDA.categorias.map(c => c.id);
+  catalogo.sort((a, b) => orden.indexOf(a.cat) - orden.indexOf(b.cat));
+  $('listaProductos').innerHTML = TIENDA.categorias.map(c => {
+    const items = catalogo.filter(p => p.cat === c.id);
+    return `<div class="cat-titulo">${c.nombre} (${items.length})</div>` + items.map(tarjeta).join('');
+  }).join('');
 }
 function dibujar(d) {
   $('txtEspejo').value = d.espejo.titulo; $('subEspejo').value = d.espejo.sub; $('txtCartelera').value = d.cartelera.texto; contar();
-  $('listaProductos').innerHTML = TIENDA.categorias.map(c => `<div class="cat-titulo">${c.nombre}</div>` +
-    TIENDA.productos.filter(p => p.cat === c.id).map(p => { const x = d.productos[p.id]; return `
-    <div class="producto" data-id="${p.id}">
-      ${p.img ? `<img class="muestra" src="${p.img}" alt="" style="object-fit:contain;background:#fff">` : `<div class="muestra" style="background:${p.color}" aria-hidden="true"></div>`}
-      <div>
-        <div class="producto-nombre">${p.nombre}</div>
-        <div class="controles">
-          <label class="precio-campo"><span>$</span><input type="number" inputmode="numeric" min="1" step="1" value="${x.precio}" aria-label="Precio de ${p.nombre}"></label>
-          <button class="btn-agotado" aria-pressed="${x.agotado}">${x.agotado ? 'Agotado' : 'Disponible'}</button>
-        </div>
-      </div>
-    </div>`; }).join('')).join('');
+  catalogo = JSON.parse(JSON.stringify(d.catalogo)); dibujarProductos();
 }
 function leerFormulario() {
-  const productos = {}; let valido = true;
+  let valido = true;
   document.querySelectorAll('.producto').forEach(f => {
-    const inp = f.querySelector('input'), n = Math.round(Number(inp.value)), ok = n > 0;
-    inp.closest('.precio-campo').classList.toggle('error', !ok); if (!ok) valido = false;
-    productos[f.dataset.id] = { precio: ok ? n : 0, agotado: f.querySelector('.btn-agotado').getAttribute('aria-pressed') === 'true' };
+    const p = catalogo.find(x => x.id === f.dataset.id); if (!p) return;
+    const okN = !!p.nombre.trim(), okP = Number(p.precio) > 0;
+    f.querySelector('.campo-nombre').classList.toggle('error', !okN);
+    f.querySelector('.precio-campo').classList.toggle('error', !okP);
+    if (!okN || !okP) valido = false;
   });
-  return { valido, datos: { espejo: { titulo: $('txtEspejo').value.trim(), sub: $('subEspejo').value.trim() }, cartelera: { texto: $('txtCartelera').value.trim() }, productos } };
+  return { valido, datos: { espejo: { titulo: $('txtEspejo').value.trim(), sub: $('subEspejo').value.trim() },
+    cartelera: { texto: $('txtCartelera').value.trim() },
+    catalogo: catalogo.map(p => ({ id: p.id, cat: p.cat, nombre: p.nombre.trim(), desc: p.desc || '', img: p.img || '', color: p.color || '#DDAAA6',
+      precio: Math.round(Number(p.precio)) || 0, destacado: !!p.destacado, agotado: !!p.agotado })) } };
 }
 function igual(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
 function revisar() {
   const { valido, datos } = leerFormulario(), cambios = !igual(datos, publicado);
   $('btnPublicar').disabled = !cambios || !valido; const e = $('estado');
-  if (!valido) { e.className = 'estado error'; e.textContent = 'Revisá los precios: tienen que ser números mayores a 0.'; }
+  if (!valido) { e.className = 'estado error'; e.textContent = 'Revisá los productos marcados en rojo: falta el nombre o el precio.'; }
   else if (cambios) { e.className = 'estado pendiente'; e.textContent = 'Tenés cambios sin publicar.'; }
   else if (!e.classList.contains('ok')) { e.className = 'estado'; e.textContent = 'Sin cambios.'; }
 }
 function contar() { $('contEspejo').textContent = `${$('txtEspejo').value.length}/30`; $('contCartelera').textContent = `${$('txtCartelera').value.length}/180`; }
 const alEditar = () => { contar(); $('estado').classList.remove('ok'); revisar(); };
 ['txtEspejo', 'subEspejo', 'txtCartelera'].forEach(id => $(id).addEventListener('input', alEditar));
-$('listaProductos').addEventListener('input', alEditar);
+
+/* Edición de productos */
+const prodDe = el => catalogo.find(x => x.id === el.closest('.producto').dataset.id);
+$('listaProductos').addEventListener('input', e => {
+  const campo = e.target.dataset.campo; if (!campo || campo === 'cat') return;
+  const p = prodDe(e.target); p[campo] = campo === 'precio' ? e.target.value : e.target.value; alEditar();
+});
+$('listaProductos').addEventListener('change', e => {
+  if (e.target.dataset.campo !== 'cat') return;
+  const p = prodDe(e.target), nueva = e.target.value;
+  if (p.destacado && catalogo.filter(x => x.cat === nueva && x.destacado).length >= 3) { p.destacado = false; alert('Esa categoría ya tiene 3 productos en el estante. Este producto queda en "Ver más".'); }
+  p.cat = nueva; dibujarProductos(); alEditar();
+});
+let fotoPara = null;
 $('listaProductos').addEventListener('click', e => {
-  const b = e.target.closest('.btn-agotado'); if (!b) return;
-  const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); b.textContent = on ? 'Agotado' : 'Disponible'; alEditar();
+  const b = e.target.closest('[data-accion]'); if (!b) return; const p = prodDe(b);
+  const acc = b.dataset.accion;
+  if (acc === 'foto') { fotoPara = p.id; $('archivoFoto').value = ''; $('archivoFoto').click(); return; }
+  if (acc === 'agotado') { p.agotado = !p.agotado; b.setAttribute('aria-pressed', p.agotado); b.textContent = p.agotado ? 'Agotado' : 'Disponible'; }
+  if (acc === 'estante') {
+    if (!p.destacado && catalogo.filter(x => x.cat === p.cat && x.destacado).length >= 3) { alert('Ya hay 3 productos en el estante de esta categoría. Sacá uno antes de agregar otro.'); return; }
+    p.destacado = !p.destacado; b.setAttribute('aria-pressed', p.destacado); b.textContent = p.destacado ? '★ En estante' : '☆ En estante';
+  }
+  if (acc === 'quitar') {
+    if (!confirm(`¿Quitar "${p.nombre || 'este producto'}" de la tienda? Vas a poder volver a cargarlo cuando quieras.`)) return;
+    catalogo = catalogo.filter(x => x.id !== p.id); dibujarProductos();
+  }
+  alEditar();
+});
+$('btnAgregar').addEventListener('click', () => {
+  const p = { id: nuevoId(), cat: TIENDA.categorias[0].id, nombre: '', desc: '', img: '', color: '#DDAAA6', precio: '', destacado: false, agotado: false };
+  catalogo.push(p); dibujarProductos(); alEditar();
+  const el = document.querySelector(`.producto[data-id="${p.id}"]`); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.querySelector('.campo-nombre').focus();
+});
+
+/* Foto: se achica en el celular antes de guardarla (máx. ~360 px) */
+function achicarFoto(archivo, lado) {
+  return new Promise((ok, mal) => {
+    const lector = new FileReader();
+    lector.onerror = mal;
+    lector.onload = () => {
+      const img = new Image(); img.onerror = mal;
+      img.onload = () => {
+        const esc = Math.min(1, lado / Math.max(img.width, img.height));
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * esc); c.height = Math.round(img.height * esc);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        let url = c.toDataURL('image/webp', 0.82);
+        if (!url.startsWith('data:image/webp')) url = c.toDataURL('image/png');
+        ok(url);
+      };
+      img.src = lector.result;
+    };
+    lector.readAsDataURL(archivo);
+  });
+}
+$('archivoFoto').addEventListener('change', async () => {
+  const f = $('archivoFoto').files[0]; if (!f || !fotoPara) return;
+  const p = catalogo.find(x => x.id === fotoPara); if (!p) return;
+  try {
+    let url = await achicarFoto(f, 360);
+    if (url.length > 90000) url = await achicarFoto(f, 260);
+    p.img = url; dibujarProductos(); alEditar();
+  } catch (e) { alert('No se pudo leer esa imagen. Probá con otra (PNG, JPG o WEBP).'); }
 });
 
 async function guardar(datos) {
@@ -272,8 +375,8 @@ $('btnPublicar').addEventListener('click', async () => {
   $('btnPublicar').textContent = 'Publicar cambios'; revisar();
 });
 $('btnRestaurar').addEventListener('click', () => {
-  if (!confirm('¿Volver a los precios y textos originales? Después tenés que publicar para aplicarlo.')) return;
-  dibujar(datosOriginales()); $('estado').classList.remove('ok'); revisar();
+  if (!confirm('¿Descartar los cambios que todavía no publicaste? Vuelve a lo que se ve hoy en la tienda.')) return;
+  dibujar(publicado); $('estado').classList.remove('ok'); revisar();
 });
 addEventListener('beforeunload', e => { if (!$('btnPublicar').disabled) { e.preventDefault(); e.returnValue = ''; } });
 
