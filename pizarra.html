@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>La Pizarra — Maquillajes Diva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500;1,700&family=Jost:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232E2F33'/%3E%3Cg fill='%23F2EEE6'%3E%3Cpath d='M8 16h12v18a6 6 0 0 1-12 0z'/%3E%3Cpath d='M32 16h12v18a6 6 0 0 1-12 0z'/%3E%3C/g%3E%3Cg fill='%23B0674A'%3E%3Cpath d='M20 16h12v18a6 6 0 0 1-12 0z'/%3E%3Cpath d='M44 16h12v18a6 6 0 0 1-12 0z'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+  :root { --grafito: #7A2E42; --hueso: #F5E6E2; --hueso-2: #EAD1CB; --cuero: #C9A45C; --cuero-osc: #5E2233;
+    --piedra: #9A8589; --texto-2: #6B5A5E; --rojo: #C8372D; --verde: #3D7A4E; --franja: 56px;
+    --fuente: "Jost", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; --serif: "Playfair Display", Georgia, serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--fuente); background: var(--hueso); color: var(--grafito); font-size: 17px; line-height: 1.5;
+    padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+  button, input, textarea { font-family: inherit; }
+  .toldo { height: 10px; background: var(--grafito); border-bottom: 4px solid var(--cuero); margin-bottom: 18px; }
+  .franjas { display: flex; width: max-content; }
+  .franjas span { flex: 0 0 var(--franja); height: 44px; border-radius: 0 0 calc(var(--franja)/2) calc(var(--franja)/2); background: var(--cuero); }
+  .franjas span:nth-child(even) { background: var(--hueso-2); }
+  .cont { max-width: 620px; margin: 0 auto; padding: 0 18px; }
+  header.cabeza { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 6px 0 18px; }
+  .marca { font-family: "Great Vibes", "Brush Script MT", cursive; font-weight: 400; font-size: 30px; color: var(--grafito); }
+  .ver-tienda { font-size: 15px; font-weight: 500; color: var(--grafito); background: #fff; border: 2px solid var(--hueso-2);
+    padding: 8px 14px; border-radius: 999px; text-decoration: none; white-space: nowrap; }
+  h1 { font-family: var(--serif); font-size: clamp(34px, 8vw, 48px); line-height: 1.05; color: var(--grafito); }
+  .tarjeta h2 { font-family: var(--serif); color: var(--grafito); }
+  .cat-titulo { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--cuero); font-weight: 600; margin: 16px 0 2px; }
+  .bajada { color: var(--texto-2); margin: 8px 0 18px; }
+  .aviso-demo { background: var(--grafito); color: var(--hueso); border-radius: 14px; padding: 12px 16px; font-size: 15px; margin-bottom: 18px; }
+  .aviso-demo b { color: #E2C98F; }
+  .tarjeta { background: #fff; border: 2px solid var(--hueso-2); border-radius: 18px; padding: 18px; margin-bottom: 16px; }
+  .tarjeta h2 { font-size: 20px; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .ayuda { color: var(--texto-2); font-size: 14px; margin-bottom: 12px; }
+  .espejo-caja { background: var(--cuero); border-radius: 18px; padding: 16px; position: relative; }
+  .espejo-vidrio { background: linear-gradient(135deg, #7A2E42, #5E2233); border-radius: 8px; padding: 14px 12px; }
+  .espejo-vidrio input { display: block; width: 100%; background: transparent; border: 0; outline: none; text-align: center; color: #F5E6E2; }
+  .espejo-vidrio .t { font-family: var(--serif); font-style: italic; font-size: 28px; }
+  .espejo-vidrio .s { font-size: 14px; letter-spacing: .14em; text-transform: uppercase; color: #DDAAA6; margin-top: 6px; }
+  .espejo-vidrio input::placeholder { color: rgba(245,230,226,.5); }
+  .cartel-caja { background: #FBF4F2; border: 8px solid var(--cuero); border-radius: 10px; padding: 12px; }
+  .cartel-caja b { display: block; font-family: var(--serif); color: var(--grafito); font-size: 20px; margin-bottom: 6px; }
+  .cartel-caja textarea { width: 100%; min-height: 120px; resize: vertical; border: 0; outline: none; background: transparent; font-size: 16px; line-height: 1.45; color: #2B2427; }
+  .contador { font-size: 13px; color: var(--piedra); text-align: right; margin-top: 6px; }
+  .fila-opciones { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .contador { font-size: 13px; color: var(--piedra); }
+  .interruptor { display: inline-flex; align-items: center; gap: 10px; font-size: 15px; cursor: pointer; }
+  .interruptor input { appearance: none; -webkit-appearance: none; width: 46px; height: 28px; border-radius: 14px; background: var(--hueso-2);
+    position: relative; cursor: pointer; transition: background .2s; flex: none; }
+  .interruptor input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+  .interruptor input:checked { background: var(--grafito); }
+  .interruptor input:checked::after { transform: translateX(18px); }
+  .producto { display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid var(--hueso-2); align-items: center; }
+  .producto:first-of-type { border-top: 0; }
+  .muestra { width: 52px; height: 52px; border-radius: 12px; border: 2px solid var(--hueso-2); }
+  .producto-nombre { font-weight: 500; }
+  .controles { display: flex; gap: 10px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+  .precio-campo { display: flex; align-items: center; border: 2px solid var(--hueso-2); border-radius: 12px; overflow: hidden; background: #fff; }
+  .precio-campo span { padding: 0 4px 0 12px; color: var(--piedra); font-weight: 500; }
+  .precio-campo input { width: 96px; border: 0; outline: none; padding: 10px 12px 10px 2px; font-size: 18px; font-weight: 700; color: var(--grafito); background: transparent; }
+  .precio-campo:focus-within { border-color: var(--grafito); }
+  .precio-campo.error { border-color: var(--rojo); }
+  .btn-agotado { border: 2px solid var(--verde); background: #EEF5EF; color: var(--verde); border-radius: 12px; padding: 10px 14px; font-size: 15px; font-weight: 700; cursor: pointer; min-width: 128px; }
+  .btn-agotado[aria-pressed="true"] { border-color: var(--rojo); background: var(--rojo); color: #fff; }
+  .barra-publicar { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(242,238,230,.96); border-top: 2px solid var(--hueso-2);
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px)); backdrop-filter: blur(6px); }
+  .barra-publicar .cont { display: flex; align-items: center; gap: 12px; }
+  .estado { flex: 1; font-size: 14px; color: var(--texto-2); line-height: 1.3; }
+  .estado.pendiente { color: var(--cuero-osc); font-weight: 500; }
+  .estado.ok { color: var(--verde); font-weight: 500; }
+  .estado.error { color: var(--rojo); font-weight: 500; }
+  .btn-publicar { background: var(--grafito); color: var(--hueso); border: 0; border-radius: 14px; padding: 15px 22px; font-size: 17px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+  .btn-publicar:disabled { opacity: .45; cursor: default; }
+  .restaurar { background: none; border: 0; color: var(--texto-2); text-decoration: underline; font-size: 14px; cursor: pointer; margin: 4px 0 20px; }
+  .ingreso { text-align: center; padding: 30px 18px; }
+  .ingreso button { margin-top: 14px; }
+  [hidden] { display: none !important; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--cuero); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<div class="toldo" aria-hidden="true"></div>
+<main class="cont">
+  <header class="cabeza">
+    <span class="marca">Maquillajes Diva</span>
+    <a class="ver-tienda" href="./" target="_blank" rel="noopener">Ver la tienda ↗</a>
+  </header>
+  <h1>La Pizarra</h1>
+  <p class="bajada">Cambiá tus promociones, precios y stock. Los cambios aparecen en tu tienda al instante.</p>
+
+  <div class="aviso-demo" id="avisoDemo" hidden>
+    <b>Modo demostración.</b> Los cambios se guardan solo en este navegador. Abrí la tienda en otra pestaña y mirá cómo se actualiza al publicar.
+  </div>
+
+  <section class="tarjeta ingreso" id="panelIngreso" hidden>
+    <h2>Ingresá para editar tu tienda</h2>
+    <p class="ayuda">Solo la cuenta dueña de la tienda puede publicar cambios.</p>
+    <button class="btn-publicar" id="btnIngresar">Ingresar con Google</button>
+  </section>
+
+  <div id="editor" hidden>
+    <section class="tarjeta">
+      <h2>Espejo de promociones</h2>
+      <p class="ayuda">El espejo con luces de la sala de caja. Para ofertas y promociones.</p>
+      <div class="espejo-caja"><div class="espejo-vidrio">
+        <input class="t" id="txtEspejo" maxlength="30" placeholder="Tu promoción" aria-label="Título del espejo">
+        <input class="s" id="subEspejo" maxlength="32" placeholder="Línea chica (opcional)" aria-label="Línea chica del espejo">
+      </div></div>
+      <div class="contador" id="contEspejo">0/30</div>
+    </section>
+    <section class="tarjeta">
+      <h2>Cartelera de información</h2>
+      <p class="ayuda">Formas de pago, envíos y próximas novedades. Cada renglón es una línea.</p>
+      <div class="cartel-caja"><b>Para tener en cuenta</b>
+        <textarea id="txtCartelera" maxlength="180" aria-label="Texto de la cartelera"></textarea></div>
+      <div class="contador" id="contCartelera">0/180</div>
+    </section>
+
+    <section class="tarjeta">
+      <h2>Productos</h2>
+      <p class="ayuda">Cambiá precios y marcá lo que no tengas en stock.</p>
+      <div id="listaProductos"></div>
+    </section>
+
+    <button class="restaurar" id="btnRestaurar">Volver a los valores originales</button>
+  </div>
+</main>
+
+<div class="barra-publicar" id="barra" hidden>
+  <div class="cont">
+    <span class="estado" id="estado">Sin cambios.</span>
+    <button class="btn-publicar" id="btnPublicar" disabled>Publicar cambios</button>
+  </div>
+</div>
+
+<script>
+/* Catálogo: copia del bloque TIENDA de la tienda (mantener igual en los dos archivos) */
+const TIENDA = {
+  nombre: 'Maquillajes Diva',
+  whatsapp: '59891782945', // REEMPLAZAR por el número de Diva (598 + número sin el 0)
+  moneda: '$',
+  categorias: [
+    { id: 'labios', nombre: 'Labios', pared: 'frente' },
+    { id: 'ojos', nombre: 'Ojos', pared: 'derecha' },
+    { id: 'rostro', nombre: 'Rostro', pared: 'atras' },
+    { id: 'cuidado', nombre: 'Cuidado de la piel', pared: 'izquierda' }
+  ],
+  espejo: { titulo: '¡Nuevos ingresos!', sub: 'Mirá los estantes' },
+  cartelera: { texto: 'Pagos: efectivo, transferencia y Mercado Pago.\nEnvíos a todo Durazno.\nPróximamente: nueva línea de skincare.' },
+  productos: [
+    // Fotos reales de Diva (carpeta img). Precios PROVISORIOS: los define Diva desde La Pizarra.
+    { id: 'set-labial', cat: 'labios', img: 'img/set-labial-mate.webp', nombre: 'Set labial mate', desc: 'Labial líquido mate con delineador al tono.', precio: 420, color: '#9E1F2C', destacado: true },
+    { id: 'brillo-patita', cat: 'labios', img: 'img/brillo-patita.webp', nombre: 'Brillo Patita', desc: 'Brillo con glitter y tapa de patita.', precio: 290, color: '#D9A071', destacado: true },
+    { id: 'paleta', cat: 'ojos', img: 'img/paleta-sombras.webp', nombre: 'Paleta de sombras', desc: '10 tonos cálidos, mate y brillo.', precio: 520, color: '#C0504D', destacado: true },
+    { id: 'base-bb', cat: 'rostro', img: 'img/base-bb.webp', nombre: 'Base BB 36 h', desc: 'Cobertura liviana y larga duración.', precio: 450, color: '#E2B99C', destacado: true },
+    { id: 'rubor', cat: 'rostro', img: 'img/rubor-liquido.webp', nombre: 'Rubor líquido', desc: 'Acabado natural, fácil de difuminar.', precio: 350, color: '#E0604A', destacado: true },
+    { id: 'fijador', cat: 'rostro', img: 'img/fijador-get-a-grip.webp', nombre: 'Spray fijador matte', desc: 'Fija el maquillaje y controla el brillo.', precio: 390, color: '#E94C8B', destacado: true }
+  ]
+};
+
+const FIREBASE_CONFIG = null;
+const RUTA_DATOS = 'tiendas/diva';
+const CLAVE_DEMO = 'pizarra:' + RUTA_DATOS;
+const FB_VER = '10.12.2';
+function cargarScript(src) { return new Promise((ok, mal) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = mal; document.head.appendChild(s); }); }
+async function iniciarFirebase(conAuth) {
+  const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
+  await cargarScript(base + 'firebase-app-compat.js'); await cargarScript(base + 'firebase-database-compat.js');
+  if (conAuth) await cargarScript(base + 'firebase-auth-compat.js');
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+}
+async function escucharDatos(alCambiar) {
+  if (!FIREBASE_CONFIG) {
+    const leer = () => { try { const v = localStorage.getItem(CLAVE_DEMO); alCambiar(v ? JSON.parse(v) : null); } catch (e) { alCambiar(null); } };
+    leer(); addEventListener('storage', e => { if (e.key === CLAVE_DEMO) leer(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) leer(); });
+    return;
+  }
+  try { await iniciarFirebase(false); firebase.database().ref(RUTA_DATOS).on('value', s => alCambiar(s.val()), () => alCambiar(null)); }
+  catch (e) { alCambiar(null); }
+}
+
+
+/* ---------- Pizarra ---------- */
+const $ = id => document.getElementById(id);
+let publicado = null;
+function datosOriginales() {
+  const productos = {};
+  TIENDA.productos.forEach(p => productos[p.id] = { precio: p.precio, agotado: false });
+  return { espejo: { ...TIENDA.espejo }, cartelera: { ...TIENDA.cartelera }, productos };
+}
+function completar(d) {
+  const base = datosOriginales(); d = d || {};
+  if (d.espejo) base.espejo = { titulo: String(d.espejo.titulo ?? base.espejo.titulo), sub: String(d.espejo.sub ?? base.espejo.sub) };
+  if (d.cartelera) base.cartelera = { texto: String(d.cartelera.texto ?? base.cartelera.texto) };
+  TIENDA.productos.forEach(p => { const x = (d.productos || {})[p.id] || {};
+    base.productos[p.id] = { precio: Number(x.precio) > 0 ? Number(x.precio) : p.precio, agotado: !!x.agotado }; });
+  return base;
+}
+function dibujar(d) {
+  $('txtEspejo').value = d.espejo.titulo; $('subEspejo').value = d.espejo.sub; $('txtCartelera').value = d.cartelera.texto; contar();
+  $('listaProductos').innerHTML = TIENDA.categorias.map(c => `<div class="cat-titulo">${c.nombre}</div>` +
+    TIENDA.productos.filter(p => p.cat === c.id).map(p => { const x = d.productos[p.id]; return `
+    <div class="producto" data-id="${p.id}">
+      ${p.img ? `<img class="muestra" src="${p.img}" alt="" style="object-fit:contain;background:#fff">` : `<div class="muestra" style="background:${p.color}" aria-hidden="true"></div>`}
+      <div>
+        <div class="producto-nombre">${p.nombre}</div>
+        <div class="controles">
+          <label class="precio-campo"><span>$</span><input type="number" inputmode="numeric" min="1" step="1" value="${x.precio}" aria-label="Precio de ${p.nombre}"></label>
+          <button class="btn-agotado" aria-pressed="${x.agotado}">${x.agotado ? 'Agotado' : 'Disponible'}</button>
+        </div>
+      </div>
+    </div>`; }).join('')).join('');
+}
+function leerFormulario() {
+  const productos = {}; let valido = true;
+  document.querySelectorAll('.producto').forEach(f => {
+    const inp = f.querySelector('input'), n = Math.round(Number(inp.value)), ok = n > 0;
+    inp.closest('.precio-campo').classList.toggle('error', !ok); if (!ok) valido = false;
+    productos[f.dataset.id] = { precio: ok ? n : 0, agotado: f.querySelector('.btn-agotado').getAttribute('aria-pressed') === 'true' };
+  });
+  return { valido, datos: { espejo: { titulo: $('txtEspejo').value.trim(), sub: $('subEspejo').value.trim() }, cartelera: { texto: $('txtCartelera').value.trim() }, productos } };
+}
+function igual(a, b) { return JSON.stringify(a) === JSON.stringify(b); }
+function revisar() {
+  const { valido, datos } = leerFormulario(), cambios = !igual(datos, publicado);
+  $('btnPublicar').disabled = !cambios || !valido; const e = $('estado');
+  if (!valido) { e.className = 'estado error'; e.textContent = 'Revisá los precios: tienen que ser números mayores a 0.'; }
+  else if (cambios) { e.className = 'estado pendiente'; e.textContent = 'Tenés cambios sin publicar.'; }
+  else if (!e.classList.contains('ok')) { e.className = 'estado'; e.textContent = 'Sin cambios.'; }
+}
+function contar() { $('contEspejo').textContent = `${$('txtEspejo').value.length}/30`; $('contCartelera').textContent = `${$('txtCartelera').value.length}/180`; }
+const alEditar = () => { contar(); $('estado').classList.remove('ok'); revisar(); };
+['txtEspejo', 'subEspejo', 'txtCartelera'].forEach(id => $(id).addEventListener('input', alEditar));
+$('listaProductos').addEventListener('input', alEditar);
+$('listaProductos').addEventListener('click', e => {
+  const b = e.target.closest('.btn-agotado'); if (!b) return;
+  const on = b.getAttribute('aria-pressed') !== 'true'; b.setAttribute('aria-pressed', on); b.textContent = on ? 'Agotado' : 'Disponible'; alEditar();
+});
+
+async function guardar(datos) {
+  datos = { ...datos, actualizado: Date.now() };
+  if (!FIREBASE_CONFIG) { localStorage.setItem(CLAVE_DEMO, JSON.stringify(datos)); return; }
+  await firebase.database().ref(RUTA_DATOS).set(datos);
+}
+$('btnPublicar').addEventListener('click', async () => {
+  const { valido, datos } = leerFormulario(); if (!valido) return;
+  $('btnPublicar').disabled = true; $('btnPublicar').textContent = 'Publicando…';
+  try {
+    await guardar(datos); publicado = datos;
+    const e = $('estado'); e.className = 'estado ok';
+    e.textContent = 'Publicado ✓ ' + new Date().toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' });
+  } catch (err) {
+    const e = $('estado'); e.className = 'estado error'; e.textContent = 'No se pudo publicar. Revisá la conexión o tu sesión.';
+  }
+  $('btnPublicar').textContent = 'Publicar cambios'; revisar();
+});
+$('btnRestaurar').addEventListener('click', () => {
+  if (!confirm('¿Volver a los precios y textos originales? Después tenés que publicar para aplicarlo.')) return;
+  dibujar(datosOriginales()); $('estado').classList.remove('ok'); revisar();
+});
+addEventListener('beforeunload', e => { if (!$('btnPublicar').disabled) { e.preventDefault(); e.returnValue = ''; } });
+
+function mostrarEditor(d) {
+  publicado = completar(d); dibujar(publicado);
+  $('editor').hidden = false; $('barra').hidden = false; $('panelIngreso').hidden = true; revisar();
+}
+
+(async function iniciar() {
+  if (!FIREBASE_CONFIG) {
+    $('avisoDemo').hidden = false;
+    let d = null; try { d = JSON.parse(localStorage.getItem(CLAVE_DEMO)); } catch (e) {}
+    mostrarEditor(d); return;
+  }
+  try {
+    await iniciarFirebase(true);
+    $('btnIngresar').addEventListener('click', () => firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(() => {
+      $('panelIngreso').querySelector('.ayuda').textContent = 'No se pudo ingresar. Probá de nuevo.';
+    }));
+    firebase.auth().onAuthStateChanged(async u => {
+      if (!u) { $('panelIngreso').hidden = false; $('editor').hidden = true; $('barra').hidden = true; return; }
+      const s = await firebase.database().ref(RUTA_DATOS).once('value');
+      mostrarEditor(s.val());
+    });
+  } catch (e) {
+    $('panelIngreso').hidden = false;
+    $('panelIngreso').querySelector('.ayuda').textContent = 'No se pudo conectar con la base de datos.';
+  }
+})();
+</script>
+</body>
+</html>
